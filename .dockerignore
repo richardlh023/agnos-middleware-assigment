@@ -1,0 +1,41 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.a
+*.test
+
+# Go build cache
+.cache/
+/agnos-server
+/main
+
+# Editor files
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*~
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Docker
+Dockerfile
+docker-compose.yaml
+.dockerignore
+
+# Environment
+.env
+.env.local
+
+# Test files
+*_test.go
+

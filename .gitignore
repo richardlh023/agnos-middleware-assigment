@@ -1,0 +1,39 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+agnos-server
+main
+server
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Environment variables
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Swagger generated docs (optional - can be committed)
+# docs/
+

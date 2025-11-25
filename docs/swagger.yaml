@@ -1,0 +1,279 @@
+basePath: /
+definitions:
+  models.CreateStaffRequest:
+    properties:
+      department:
+        example: Cardiology
+        type: string
+      email:
+        example: john.doe@hospital.com
+        type: string
+      employee_id:
+        example: EMP001
+        type: string
+      first_name:
+        example: John
+        type: string
+      hospital:
+        example: Hospital A
+        type: string
+      last_name:
+        example: Doe
+        type: string
+      password:
+        example: password123
+        minLength: 6
+        type: string
+      phone_number:
+        example: "0891234567"
+        type: string
+      role:
+        example: Doctor
+        type: string
+      username:
+        example: doctor1
+        type: string
+    required:
+    - email
+    - employee_id
+    - first_name
+    - hospital
+    - last_name
+    - password
+    - role
+    - username
+    type: object
+  models.LoginRequest:
+    properties:
+      password:
+        example: password123
+        type: string
+      username:
+        example: doctor1
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  models.LoginResponse:
+    properties:
+      department:
+        type: string
+      email:
+        type: string
+      employee_id:
+        type: string
+      first_name:
+        type: string
+      hospital:
+        type: string
+      last_name:
+        type: string
+      role:
+        type: string
+      token:
+        type: string
+      username:
+        type: string
+    type: object
+  utils.AccessDeniedErrorResponse:
+    properties:
+      error:
+        example: 'access denied: patient does not belong to your hospital'
+        type: string
+    type: object
+  utils.AuthErrorResponse:
+    properties:
+      error:
+        example: authorization header required
+        type: string
+    type: object
+  utils.CreateStaffErrorResponse:
+    properties:
+      error:
+        example: username already exists
+        type: string
+    type: object
+  utils.LoginErrorResponse:
+    properties:
+      error:
+        example: invalid credentials
+        type: string
+    type: object
+  utils.NotFoundErrorResponse:
+    properties:
+      error:
+        example: patient not found
+        type: string
+    type: object
+  utils.PatientSearchErrorResponse:
+    properties:
+      error:
+        example: at least one search criteria must be provided
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Hospital Middleware System API for staff authentication and patient
+    search
+  title: Agnos Middleware API
+  version: "1.0"
+paths:
+  /patient/search:
+    get:
+      consumes:
+      - application/json
+      description: Search for patients by optional criteria. Requires JWT authentication.
+        Staff can only access patients from their own hospital.
+      parameters:
+      - default: "1234567890123"
+        description: 'Patient ID (must be national_id or passport_id). Examples: Hospital
+          A - 1234567890123, 9876543210987, AB1234567; Hospital B - 1111222233334,
+          4455667788990'
+        in: query
+        name: id
+        type: string
+      - description: Hospital Number
+        in: query
+        name: patient_hn
+        type: string
+      - description: National ID
+        in: query
+        name: national_id
+        type: string
+      - description: Passport ID
+        in: query
+        name: passport_id
+        type: string
+      - description: First name (partial match)
+        in: query
+        name: first_name
+        type: string
+      - description: Middle name (partial match)
+        in: query
+        name: middle_name
+        type: string
+      - description: Last name (partial match)
+        in: query
+        name: last_name
+        type: string
+      - description: Date of birth (YYYY-MM-DD)
+        in: query
+        name: date_of_birth
+        type: string
+      - description: Phone number
+        in: query
+        name: phone_number
+        type: string
+      - description: Email
+        in: query
+        name: email
+        type: string
+      - description: Gender (M/F)
+        in: query
+        name: gender
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Patients found
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request - at least one search criteria must be provided
+          schema:
+            $ref: '#/definitions/utils.PatientSearchErrorResponse'
+        "401":
+          description: Unauthorized - authorization header required or invalid token
+          schema:
+            $ref: '#/definitions/utils.AuthErrorResponse'
+        "403":
+          description: Access denied - patient does not belong to your hospital
+          schema:
+            $ref: '#/definitions/utils.AccessDeniedErrorResponse'
+        "404":
+          description: Patient not found
+          schema:
+            $ref: '#/definitions/utils.NotFoundErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Search for patients
+      tags:
+      - Patient
+  /staff/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new hospital staff account with employee details. All
+        fields will be pre-filled with example values in Swagger UI.
+      parameters:
+      - description: Staff creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateStaffRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Staff created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request - validation error
+          schema:
+            $ref: '#/definitions/utils.CreateStaffErrorResponse'
+        "409":
+          description: Conflict - username/email/employee_id already exists
+          schema:
+            $ref: '#/definitions/utils.CreateStaffErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.CreateStaffErrorResponse'
+      summary: Create a new staff member
+      tags:
+      - Staff
+  /staff/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate staff member and receive JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+        "400":
+          description: Bad request - validation error
+          schema:
+            $ref: '#/definitions/utils.LoginErrorResponse'
+        "401":
+          description: Unauthorized - invalid credentials
+          schema:
+            $ref: '#/definitions/utils.LoginErrorResponse'
+      summary: Staff login
+      tags:
+      - Staff
+securityDefinitions:
+  BearerAuth:
+    description: 'Type "Bearer" followed by a space and JWT token. Example: "Bearer
+      eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

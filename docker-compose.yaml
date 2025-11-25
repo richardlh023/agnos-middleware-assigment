@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: agnos-postgres
+    environment:
+      POSTGRES_USER: agnos_user
+      POSTGRES_PASSWORD: agnos_password
+      POSTGRES_DB: agnos_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agnos_user -d agnos_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agnos-network
+
+  # Go API Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agnos-api
+    environment:
+      SERVER_PORT: "8080"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: agnos_user
+      DB_PASSWORD: agnos_password
+      DB_NAME: agnos_db
+      JWT_SECRET: your-secret-key-change-this-in-production
+      HIS_API_BASE_URL: https://hospital-a.api.co.th
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - agnos-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: agnos-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    networks:
+      - agnos-network
+    restart: unless-stopped
+
+networks:
+  agnos-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+
